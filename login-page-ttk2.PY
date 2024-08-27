@@ -3,8 +3,9 @@ import tkinter as tk
 from tkinter import messagebox
 
 class Login_applicaton():
-
-    def __init__(self) -> None:
+    def start_page(self,back=None):
+        if back!=None:
+            back.destroy()
         self.login_window = tk.Tk()
         self.login_window.title("login page")
 
@@ -23,6 +24,19 @@ class Login_applicaton():
         self.sinup_button.pack()
 
         self.login_window.mainloop()
+
+    def __init__(self) -> None:
+        self.start_page()
+        conn=sqlite3.connect('user_db.db')
+        courser=conn.cursor()
+        courser.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                        USERNAME TEXT PRIMARY KEY,
+                        PASSWORD TEXT NOT NULL,
+                        NAME TEXT NOT NULL,
+                        AGE INTEGER NOT NULL,
+                        EMAIL TEXT NOT NULL)
+            ''')
 
     def sinup(self):
 
@@ -69,6 +83,9 @@ class Login_applicaton():
 
         conn.commit()
         conn.close()
+        self.sinup_window.destroy()
+        self.start_page()
+
 
         
 
@@ -84,12 +101,12 @@ SELECT * FROM users WHERE USERNAME = ? AND PASSWORD =?''',(username,password))
         user=courser.fetchone()
 
         if user:
-            self.show_profile(user)
+            self.show_profile(user,self.login_window)
         else:
             messagebox.showerror(title="login failed",message="invalid username or password")
         conn.close()
-    def show_profile(self,user):
-        self.login_window.destroy()
+    def show_profile(self,user,page):
+        page.destroy()
         self.profile_window=tk.Tk()
         
         self.profile_window.title(f'Profile of {user[0]}')
@@ -97,10 +114,12 @@ SELECT * FROM users WHERE USERNAME = ? AND PASSWORD =?''',(username,password))
         tk.Label(self.profile_window, text=f'Name:{user[2]}').pack()
         tk.Label(self.profile_window, text=f'Age:{user[3]}').pack()
         tk.Label(self.profile_window, text=f'E-Mail:{user[4]}').pack()
-
+        tk.Button(self.profile_window,text="back",command=self.back_p).pack()
         self.profile_window.mainloop()
-
-
+    def back_p(self):
+        self.profile_window.destroy()
+        self.start_page()
+        
 if __name__== "__main__":
     Login_applicaton()
         
